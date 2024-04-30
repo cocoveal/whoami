@@ -12,12 +12,17 @@ class StyledText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+
+    var style = theme.textTheme.titleLarge!;
+
     return Text(text,
         style: TextStyle(
-          color: Colors.white,
+          color: style.color,
           fontSize: fontSize,
           fontWeight: FontWeight.bold,
-        ));
+        )
+      );
   }
 }
 
@@ -56,7 +61,7 @@ class StyledTextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       style: TextButton.styleFrom(
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         alignment: Alignment.center,
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -64,7 +69,7 @@ class StyledTextButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       onPressed: onPressed,
-      child: StyledText(text: text,fontSize:  16),
+      child: StyledText(text: text, fontSize: 16),
     );
   }
 }
@@ -92,7 +97,7 @@ class StyledHomeButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       onPressed: onPressed,
-      child: StyledText(text: text,fontSize:  16),
+      child: StyledText(text: text, fontSize: 16),
     );
   }
 }

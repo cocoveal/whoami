@@ -13,6 +13,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: Theme.of(context),
       home: Scaffold(
         appBar: AppBar(
             backgroundColor: Colors.blueGrey[900],
@@ -25,10 +26,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text(
               'Settings',
               style: TextStyle(color: Colors.white),
-            )),
+            )
+        ),
+        
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
             Container(
               alignment: Alignment.center,
@@ -38,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 fontSize: 20,
               ),
             ),
+
             Container(
               alignment: Alignment.center,
               child: FittedBox(

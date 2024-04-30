@@ -8,6 +8,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: Theme.of(context),
       home: Scaffold(
         appBar: AppBar(
             backgroundColor: Colors.blueGrey[900],
@@ -15,31 +16,34 @@ class HomeScreen extends StatelessWidget {
             title: const Text(
               'WhoAmI?',
               style: TextStyle(color: Colors.white),
-            )),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                color: Theme.of(context).colorScheme.onPrimary,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()
+                    ),
+                  );
+                },
+              )
+            ],
+        ),
+
         body: Center(
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
+
               children: [
                 Container(
                   margin: const EdgeInsets.all(10),
                   child: StyledHomeButton(
                     onPressed: () {},
                     text: 'Who Am I?',
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.all(10),
-                  child: StyledHomeButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen()
-                        ),
-                      );
-                    },
-                    text: 'Settings',
                   ),
                 ),
               ]),
