@@ -13,6 +13,7 @@ class AppRoot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'WhoAmI?',
       home: const HomeScreen(),
       theme: ThemeData(
@@ -28,7 +29,7 @@ class AppRoot extends StatelessWidget {
         ),
         
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blueGrey,
+          backgroundColor: Colors.blueGrey[900],
           centerTitle: true,
           titleTextStyle: const Material().textStyle,
         ),

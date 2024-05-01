@@ -60,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: Theme.of(context),
       home: Scaffold(
         appBar: AppBar(
