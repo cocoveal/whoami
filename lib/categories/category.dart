@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:csv/csv.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class Category {
@@ -12,55 +11,27 @@ class Category {
     final csvString =
         await rootBundle.loadString('assets/categories/$name.csv');
     final csv = const CsvToListConverter()
-        .convert(csvString, shouldParseNumbers: false);
+        .convert(csvString,
+         shouldParseNumbers: false);
+    if (csv.isEmpty) {
+      return [
+        ['No data']
+      ];
+    }
     return csv;
   }
 
-  List<dynamic> getTest() {
-    Category test = Category(name: 'test');
-    List<dynamic> testList = [];
-    test.getCategory().then((value) {
-      testList = List.from(value[0]);
-      print('$testList inside getCategory');
-    });
-    print('$testList outside getCategory');
-    return testList;
-  }
-}
+  Future<Map<String, dynamic>> getCategories() async {
+    Map<String, dynamic> categories = {};
 
-class CategoryScreen extends StatefulWidget {
-  const CategoryScreen({super.key});
+    final Category test = Category(name: 'test');
+    var testValue = await test.getCategory().then((value) => value.first);
+    categories.putIfAbsent(test.name, () => testValue);
 
-  @override
-  State<CategoryScreen> createState() => _CategoryScreenState();
-}
+    final Category test2 = Category(name: 'test2');
+    var test2Value = await test2.getCategory().then((value) => value.first);
+    categories.putIfAbsent(test2.name, () => test2Value);
 
-class _CategoryScreenState extends State<CategoryScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: Theme.of(context),
-        home: Scaffold(
-          appBar: AppBar(
-            leading: BackButton(
-                color: Colors.white,
-                onPressed: () {
-                  Navigator.pop(context);
-                }),
-            title:
-                const Text('Category', style: TextStyle(color: Colors.white)),
-          ),
-          body: FutureBuilder(
-            future: Category(name: 'test').getCategory(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else {
-                return Text('${snapshot.data?.first}');
-              }
-            },
-          ),
-        ));
+    return categories;
   }
 }

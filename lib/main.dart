@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:whoami/home.dart';
+import 'package:flutter/services.dart';
 
 void main() {
-  runApp(const AppRoot());
+    WidgetsFlutterBinding.ensureInitialized();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]).then((value) => runApp(const AppRoot()));
+    // runApp(const AppRoot());
 }
 
 class AppRoot extends StatelessWidget {
@@ -15,11 +20,31 @@ class AppRoot extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'WhoAmI?',
-      home: const HomeScreen(),
+      home: HomeScreen(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey[900]!),
         primaryColor: Colors.blueGrey[900],
-
+        textButtonTheme: TextButtonThemeData(
+          style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all(Colors.white),
+            backgroundColor: MaterialStateProperty.all(Colors.blueGrey[900]),
+            alignment: Alignment.center,
+            padding: MaterialStateProperty.all(
+              const EdgeInsets.fromLTRB(20, 10, 20, 10),
+            ),
+            shape: MaterialStateProperty.all(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            textStyle: MaterialStateProperty.all(
+              const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
         textTheme: const TextTheme(
           titleLarge: TextStyle(
             color: Colors.white,
@@ -27,7 +52,6 @@ class AppRoot extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.blueGrey[900],
           centerTitle: true,
