@@ -141,7 +141,7 @@ class _QuizScreenState extends State<QuizScreen> {
       subscription.cancel();
     }
     selectedWords.clear();
-    widget.selected.clear();
+    //widget.selected.clear();
     timer?.cancel();
     if(switchTimer != null) {
       switchTimer?.cancel();

@@ -41,8 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => const SettingsScreen()),
+                      MaterialPageRoute(builder: (context) => SettingsScreen()),
                     );
                   },
                 )
@@ -127,6 +126,7 @@ class CategoryGrid extends StatefulWidget {
 class _CategoryGridState extends State<CategoryGrid> {
   Map<String, dynamic> categories = {};
   List images = [];
+  List<bool> isSelected = [];
 
   @override
   Widget build(BuildContext context) {
@@ -139,10 +139,10 @@ class _CategoryGridState extends State<CategoryGrid> {
         'assets/images/${categories.keys.elementAt(i)}.png',
         height: 100,
       ));
+      isSelected.add(false);
     }
 
     final selected = widget.selected;
-
     return Column(
       children: [
         Wrap(
@@ -157,6 +157,9 @@ class _CategoryGridState extends State<CategoryGrid> {
                       icon: images.elementAt(i),
                       visualDensity: VisualDensity.comfortable,
                       constraints: BoxConstraints.tight(const Size(150, 150)),
+                      isSelected: isSelected[i],
+                      selectedIcon:
+                          const Icon(Icons.check_circle_rounded, size: 100),
                       onPressed: () {
                         setState(() {
                           if (selected
@@ -166,6 +169,7 @@ class _CategoryGridState extends State<CategoryGrid> {
                             selected.putIfAbsent(categories.keys.elementAt(i),
                                 () => categories.values.elementAt(i));
                           }
+                          isSelected[i] = !isSelected[i];
                         });
                       }),
                   Wrap(

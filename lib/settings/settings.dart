@@ -36,7 +36,9 @@ class Settings {
 }
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  SettingsScreen({super.key});
+
+  final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -62,50 +64,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: Theme.of(context),
-      home: Scaffold(
-        appBar: AppBar(
-            backgroundColor: Colors.blueGrey[900],
-            leading: BackButton(
-                color: Colors.white,
-                onPressed: () {
-                  Navigator.pop(context);
-                }),
-            centerTitle: true,
-            title: const Text(
-              'Settings',
-              style: TextStyle(color: Colors.white),
-            )),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              alignment: Alignment.center,
-              margin: const EdgeInsets.all(10),
-              child: const SettingsText(
-                text: 'Timer Duration',
-                fontSize: 20,
+      home: ScaffoldMessenger(
+        key: widget.scaffoldKey,
+        child: Scaffold(
+          appBar: AppBar(
+              backgroundColor: Colors.blueGrey[900],
+              leading: BackButton(
+                  color: Colors.white,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              centerTitle: true,
+              title: const Text(
+                'Settings',
+                style: TextStyle(color: Colors.white),
+              )),
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.all(10),
+                child: const SettingsText(
+                  text: 'Timer Duration',
+                  fontSize: 20,
+                ),
               ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              child: Wrap(
-                direction: Axis.horizontal,
-                spacing: 10,
-                children: [
-                  for (int i = 0; i < 9; i++)
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      child: StyledTextButton(
-                          onPressed: () {
-                            settings.setPrefs('time', 30 * (i + 1));
-                          },
-                          text: '${30 * (i + 1)}s'),
-                    ),
-              ],
-              ),
-            )
-          ],
+              Container(
+                alignment: Alignment.center,
+                child: Wrap(
+                  direction: Axis.horizontal,
+                  spacing: 10,
+                  children: [
+                    for (int i = 0; i < 9; i++)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        child: StyledTextButton(
+                            onPressed: () {
+                              settings.setPrefs('time', 30 * (i + 1));
+                              widget.scaffoldKey.currentState!.showSnackBar(
+                                  SnackBar(
+                                      content: Text('Timer set to ${30 * (i + 1)}s'),
+                                      duration: const Duration(milliseconds: 500),
+                                      ));
+                            },
+                            text: '${30 * (i + 1)}s'),
+                      ),
+                ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

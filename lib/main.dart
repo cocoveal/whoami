@@ -23,6 +23,7 @@ class AppRoot extends StatelessWidget {
       title: 'WhoAmI?',
       home: HomeScreen(),
       theme: ThemeData(
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey[900]!),
         primaryColor: Colors.blueGrey[900],
         textButtonTheme: TextButtonThemeData(
