@@ -89,21 +89,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             Container(
               alignment: Alignment.center,
-              child: FittedBox(
-                fit: BoxFit.fitWidth,
-                child: Row(
-                  children: [
-                    for (int i = 0; i < 4; i++)
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        child: StyledTextButton(
-                            onPressed: () {
-                              settings.setPrefs('time', 30 * (i + 1));
-                            },
-                            text: '${30 * (i + 1)}s'),
-                      ),
-                  ],
-                ),
+              child: Wrap(
+                direction: Axis.horizontal,
+                spacing: 10,
+                children: [
+                  for (int i = 0; i < 9; i++)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      child: StyledTextButton(
+                          onPressed: () {
+                            settings.setPrefs('time', 30 * (i + 1));
+                          },
+                          text: '${30 * (i + 1)}s'),
+                    ),
+              ],
               ),
             )
           ],

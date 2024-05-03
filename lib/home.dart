@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:whoami/quiz.dart';
 import 'package:whoami/settings/settings.dart';
 import 'package:whoami/categories/category.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
 
   final Map<String, dynamic> selected = {};
+
+  final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -17,58 +20,79 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final selected = widget.selected;
+    final scaffoldKey = widget.scaffoldKey;
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: Theme.of(context),
-        home: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.blueGrey[900],
-            centerTitle: true,
-            title: const Text(
-              'WhoAmI?',
-              style: TextStyle(color: Colors.white),
+        home: ScaffoldMessenger(
+          key: scaffoldKey,
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.blueGrey[900],
+              centerTitle: true,
+              title: const Text(
+                'WhoAmI?',
+                style: TextStyle(color: Colors.white),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SettingsScreen()),
+                    );
+                  },
+                )
+              ],
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                color: Theme.of(context).colorScheme.onPrimary,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SettingsScreen()),
-                  );
-                },
-              )
-            ],
-          ),
-          body: SingleChildScrollView(
-            child: Container(
-              alignment: Alignment.topCenter,
-              margin: const EdgeInsets.all(5),
-              child: Column(
-                children: [
-                  TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  QuizScreen(selected: selected)),
+            body: SingleChildScrollView(
+              child: Container(
+                alignment: Alignment.topCenter,
+                margin: const EdgeInsets.all(5),
+                child: Column(
+                  children: [
+                    FutureBuilder(
+                        future: SharedPreferences.getInstance(),
+                        builder: (context, snapshot) {
+                          return TextButton(
+                              onPressed: () {
+                                const snack = SnackBar(
+                                  content: Text('Choose a Category!',
+                                      textAlign: TextAlign.center),
+                                  duration: Duration(seconds: 1),
+                                );
+                                if (selected.isEmpty) {
+                                  scaffoldKey.currentState?.showSnackBar(snack);
+                                } else {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => QuizScreen(
+                                              selected: selected,
+                                              timerDuration: snapshot.data
+                                                      ?.getInt('time') ??
+                                                  60,
+                                            )),
+                                  );
+                                }
+                              },
+                              child: const Text('Start Quiz'));
+                        }),
+                    FutureBuilder(
+                      future: Category(name: 'test').getCategories(),
+                      builder: (context, snapshot) {
+                        return CategoryGrid(
+                          snapshot: snapshot.data,
+                          context: context,
+                          selected: selected,
                         );
                       },
-                      child: const Text('Start Quiz')),
-                  FutureBuilder(
-                    future: Category(name: 'test').getCategories(),
-                    builder: (context, snapshot) {
-                      return CategoryGrid(
-                        snapshot: snapshot.data,
-                        context: context,
-                        selected: selected,
-                      );
-                    },
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -65,6 +65,7 @@ class StyledTextButton extends StatelessWidget {
         foregroundColor: Colors.white,
         alignment: Alignment.center,
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+        minimumSize: const Size(80, 20),
         enableFeedback: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),

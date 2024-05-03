@@ -1,56 +1,189 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:whoami/settings/settings.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({
     super.key,
     required this.selected,
+    required this.timerDuration,
   });
 
   final Map<String, dynamic> selected;
+
+  final int timerDuration;
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  static const Duration _ignoreDuration = Duration(milliseconds: 20);
+  GyroscopeEvent? _gyroscopeEvent;
+  DateTime? _gyroscopeUpdateTime;
+  int? _gyroscopeLastInterval;
+
+  final _streamSubscriptions = <StreamSubscription<dynamic>>[];
+
+  Duration sensorInterval = SensorInterval.normalInterval;
+
+  List<String> selectedWords = [];
+
+  Timer? timer;
+
+  int? timeDuration;
+
+  bool canSwitch = false;
+
   @override
   void initState() {
     super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-    ]);
+    // SystemChrome.setPreferredOrientations([
+    //   DeviceOrientation.landscapeLeft,
+    // ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    timeDuration = widget.timerDuration;
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (timeDuration! > 0) {
+          timeDuration = timeDuration! - 1;
+        } else {
+          Navigator.pop(context);
+        }
+      });
+    });
+
+    final selected = widget.selected;
+    selected.forEach((key, value) {
+      if (value != null) {
+        for (var i = 0; i < value.length; i++) {
+          selectedWords.add(value[i]);
+        }
+      }
+    });
+    selectedWords.shuffle();
+
+    _streamSubscriptions
+        .add(gyroscopeEventStream(samplingPeriod: sensorInterval).listen(
+      (GyroscopeEvent event) {
+        final now = DateTime.now();
+        setState(() {
+          _gyroscopeEvent = event;
+          if (_gyroscopeUpdateTime != null) {
+            final interval = now.difference(_gyroscopeUpdateTime!);
+            if (interval > _ignoreDuration) {
+              _gyroscopeLastInterval = interval.inMilliseconds;
+            }
+          }
+        });
+        _gyroscopeUpdateTime = now;
+        Timer changeTimer =
+            Timer.periodic(const Duration(seconds: 4), (timer) {
+              setState(() => canSwitch = true);
+            });
+
+        if (_gyroscopeEvent!.y > 4 && canSwitch == true) {
+          setState(() {
+            if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+              selectedWords.removeLast();
+            } else {
+              Navigator.pop(context);
+            }
+            canSwitch = false;
+          });
+        }
+        if (_gyroscopeEvent!.y < -4 && canSwitch == true) {
+          setState(() {
+            if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+              selectedWords.removeLast();
+            } else {
+              Navigator.pop(context);
+            }
+            canSwitch = false;
+          });
+        }
+      },
+      onError: (e) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return const AlertDialog(
+              title: Text('Sensor not found'),
+              content: Text('This device does not have a gyroscope.'),
+            );
+          },
+        );
+      },
+      cancelOnError: true,
+    ));
   }
 
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+    for (final subscription in _streamSubscriptions) {
+      subscription.cancel();
+    }
+    selectedWords.clear();
+    widget.selected.clear();
+    timer?.cancel();
+    canSwitch = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final selected = widget.selected;
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: Theme.of(context),
         home: Scaffold(
-          body: Column(
-            children: [
-              TextButton(
-                onPressed: () {
-                  selected.clear();
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()));
-                },
-                child: const Text('Exit'),
-              ),
-              Text(selected.toString()),
-            ],
-          ),
-        ));
+            body: RotatedBox(
+                quarterTurns: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.cancel_sharp, size: 30),
+                        ),
+                        Expanded(
+                          child: Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.only(right: 40),
+                            child: Text(
+                              '$timeDuration',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    color: Colors.blueGrey[900],
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(_gyroscopeEvent?.y.toStringAsFixed(2) ?? '?'),
+                    Text(_gyroscopeLastInterval?.toString() ?? '?'),
+                    Text('$canSwitch'),
+                    Expanded(
+                      child: Container(
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.only(bottom: 60),
+                        child: Text(
+                          selectedWords.last,
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                      ),
+                    ),
+                  ],
+                ))));
   }
 }

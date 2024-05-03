@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:whoami/home.dart';
 import 'package:flutter/services.dart';
 
@@ -45,10 +46,16 @@ class AppRoot extends StatelessWidget {
             ),
           ),
         ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(
+        textTheme: TextTheme(
+          titleLarge: const TextStyle(
             color: Colors.white,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+
+          displayMedium: TextStyle(
+            color: Colors.blueGrey[900],
+            fontSize: 42,
             fontWeight: FontWeight.bold,
           ),
         ),
