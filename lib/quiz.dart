@@ -35,7 +35,21 @@ class _QuizScreenState extends State<QuizScreen> {
 
   int? timeDuration;
 
-  bool canSwitch = false;
+  int time = 0;
+
+  Timer? switchTimer;
+
+  void startTimer() {
+    switchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (time > 0) {
+          time = time - 1;
+        } else {
+          timer.cancel();
+        }
+      });
+    });
+  }
 
   @override
   void initState() {
@@ -79,29 +93,27 @@ class _QuizScreenState extends State<QuizScreen> {
           }
         });
         _gyroscopeUpdateTime = now;
-        Timer changeTimer =
-            Timer.periodic(const Duration(seconds: 4), (timer) {
-              setState(() => canSwitch = true);
-            });
 
-        if (_gyroscopeEvent!.y > 4 && canSwitch == true) {
+        if (_gyroscopeEvent!.y > 4 && time == 0) {
           setState(() {
             if (selectedWords.isNotEmpty && selectedWords.length > 1) {
               selectedWords.removeLast();
             } else {
               Navigator.pop(context);
             }
-            canSwitch = false;
+            time = 3;
+            startTimer();
           });
         }
-        if (_gyroscopeEvent!.y < -4 && canSwitch == true) {
+        if (_gyroscopeEvent!.y < -4 && time == 0) {
           setState(() {
             if (selectedWords.isNotEmpty && selectedWords.length > 1) {
               selectedWords.removeLast();
             } else {
               Navigator.pop(context);
             }
-            canSwitch = false;
+            time = 3;
+            startTimer();
           });
         }
       },
@@ -131,7 +143,9 @@ class _QuizScreenState extends State<QuizScreen> {
     selectedWords.clear();
     widget.selected.clear();
     timer?.cancel();
-    canSwitch = false;
+    if(switchTimer != null) {
+      switchTimer?.cancel();
+    }
   }
 
   @override
@@ -170,13 +184,10 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                       ],
                     ),
-                    Text(_gyroscopeEvent?.y.toStringAsFixed(2) ?? '?'),
-                    Text(_gyroscopeLastInterval?.toString() ?? '?'),
-                    Text('$canSwitch'),
                     Expanded(
                       child: Container(
                         alignment: Alignment.center,
-                        margin: const EdgeInsets.only(bottom: 60),
+                        margin: const EdgeInsets.only(bottom: 80),
                         child: Text(
                           selectedWords.last,
                           style: Theme.of(context).textTheme.displayMedium,

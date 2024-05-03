@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: const Text('Start Quiz'));
                         }),
                     FutureBuilder(
-                      future: Category(name: 'test').getCategories(),
+                      future: Category().getCategories(),
                       builder: (context, snapshot) {
                         return CategoryGrid(
                           snapshot: snapshot.data,
@@ -125,14 +125,22 @@ class CategoryGrid extends StatefulWidget {
 }
 
 class _CategoryGridState extends State<CategoryGrid> {
+  Map<String, dynamic> categories = {};
+  List images = [];
+
   @override
   Widget build(BuildContext context) {
-    Map<String, dynamic> categories = {};
     if (widget.snapshot != null) {
       categories = widget.snapshot!;
-    } else {
-      return const CircularProgressIndicator();
     }
+
+    for (int i = 0; i < categories.length; i++) {
+      images.add(Image.asset(
+        'assets/images/${categories.keys.elementAt(i)}.png',
+        height: 100,
+      ));
+    }
+
     final selected = widget.selected;
 
     return Column(
@@ -146,23 +154,31 @@ class _CategoryGridState extends State<CategoryGrid> {
                 alignment: Alignment.topCenter,
                 children: [
                   IconButton(
-                    icon: Image.asset('assets/images/ironman.png', height: 100),
-                    visualDensity: VisualDensity.comfortable,
-                    iconSize: MediaQuery.of(context).size.width / 4,
-                    onPressed: () {
-                      setState(() {
-                        selected.putIfAbsent(categories.keys.elementAt(i),
-                            () => categories.values.elementAt(i));
-                      });
-                      //print(selected);
-                    },
-                  ),
-                  Text(categories.keys.elementAt(i),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      )),
+                      icon: images.elementAt(i),
+                      visualDensity: VisualDensity.comfortable,
+                      constraints: BoxConstraints.tight(const Size(150, 150)),
+                      onPressed: () {
+                        setState(() {
+                          if (selected
+                              .containsKey(categories.keys.elementAt(i))) {
+                            selected.remove(categories.keys.elementAt(i));
+                          } else {
+                            selected.putIfAbsent(categories.keys.elementAt(i),
+                                () => categories.values.elementAt(i));
+                          }
+                        });
+                      }),
+                  Wrap(
+                      alignment: WrapAlignment.center,
+                      direction: Axis.vertical,
+                      children: [
+                        Text(categories.keys.elementAt(i),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            )),
+                      ]),
                 ],
               ),
           ],
