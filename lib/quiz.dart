@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:whoami/results.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({
@@ -20,10 +21,7 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  static const Duration _ignoreDuration = Duration(milliseconds: 20);
   GyroscopeEvent? _gyroscopeEvent;
-  DateTime? _gyroscopeUpdateTime;
-  int? _gyroscopeLastInterval;
 
   final _streamSubscriptions = <StreamSubscription<dynamic>>[];
 
@@ -35,21 +33,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
   int? timeDuration;
 
-  int time = 0;
+  List<bool> correct = [];
 
-  Timer? switchTimer;
+  List<String> playedWords = [];
 
-  void startTimer() {
-    switchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (time > 0) {
-          time = time - 1;
-        } else {
-          timer.cancel();
-        }
-      });
-    });
-  }
+  bool isCorrect = false;
+
+  bool isWrong = false;
 
   @override
   void initState() {
@@ -64,7 +54,14 @@ class _QuizScreenState extends State<QuizScreen> {
         if (timeDuration! > 0) {
           timeDuration = timeDuration! - 1;
         } else {
-          Navigator.pop(context);
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ResultsScreen(
+                  selected: playedWords,
+                  correct: correct,
+                ),
+              ));
         }
       });
     });
@@ -82,40 +79,92 @@ class _QuizScreenState extends State<QuizScreen> {
     _streamSubscriptions
         .add(gyroscopeEventStream(samplingPeriod: sensorInterval).listen(
       (GyroscopeEvent event) {
-        final now = DateTime.now();
         setState(() {
           _gyroscopeEvent = event;
-          if (_gyroscopeUpdateTime != null) {
-            final interval = now.difference(_gyroscopeUpdateTime!);
-            if (interval > _ignoreDuration) {
-              _gyroscopeLastInterval = interval.inMilliseconds;
+
+          if (isCorrect == false && isWrong == false){
+            if (_gyroscopeEvent!.y > 4) {
+              if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+                playedWords.add(selectedWords.last);
+                selectedWords.removeLast();
+                correct.add(false);
+                isWrong = true;
+              } 
+              else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultsScreen(
+                      selected: playedWords,
+                      correct: correct,
+                    ),
+                  ),
+                );
+              }
+            }
+            else if (_gyroscopeEvent!.y < -4) {
+              if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+                playedWords.add(selectedWords.last);
+                selectedWords.removeLast();
+                correct.add(true);
+                isCorrect = true;
+              }
+              else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultsScreen(
+                      selected: playedWords,
+                      correct: correct,
+                    ),
+                  ),
+                );
+              }
             }
           }
-        });
-        _gyroscopeUpdateTime = now;
 
-        if (_gyroscopeEvent!.y > 4 && time == 0) {
-          setState(() {
-            if (selectedWords.isNotEmpty && selectedWords.length > 1) {
-              selectedWords.removeLast();
-            } else {
-              Navigator.pop(context);
-            }
-            time = 3;
-            startTimer();
-          });
-        }
-        if (_gyroscopeEvent!.y < -4 && time == 0) {
-          setState(() {
-            if (selectedWords.isNotEmpty && selectedWords.length > 1) {
-              selectedWords.removeLast();
-            } else {
-              Navigator.pop(context);
-            }
-            time = 3;
-            startTimer();
-          });
-        }
+        });
+
+        // if (_gyroscopeEvent!.y > 4 && isCorrect == false && isWrong == false) {
+        //   setState(() {
+        //     if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+        //       playedWords.add(selectedWords.last);
+        //       selectedWords.removeLast();
+        //       correct.add(false);
+        //       isWrong = true;
+        //     } else {
+        //       Navigator.pushReplacement(
+        //         context,
+        //         MaterialPageRoute(
+        //           builder: (context) => ResultsScreen(
+        //             selected: playedWords,
+        //             correct: correct,
+        //           ),
+        //         ),
+        //       );
+        //     }
+        //   });
+        // }
+        // if (_gyroscopeEvent!.y < -4 && isCorrect == false && isWrong == false) {
+        //   setState(() {
+        //     if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+        //       playedWords.add(selectedWords.last);
+        //       selectedWords.removeLast();
+        //       correct.add(true);
+        //       isCorrect = true;
+        //     } else {
+        //       Navigator.pushReplacement(
+        //         context,
+        //         MaterialPageRoute(
+        //           builder: (context) => ResultsScreen(
+        //             selected: playedWords,
+        //             correct: correct,
+        //           ),
+        //         ),
+        //       );
+        //     }
+        //   });
+        // }
       },
       onError: (e) {
         showDialog(
@@ -136,16 +185,12 @@ class _QuizScreenState extends State<QuizScreen> {
   void dispose() {
     // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    super.dispose();
     for (final subscription in _streamSubscriptions) {
       subscription.cancel();
     }
     selectedWords.clear();
-    //widget.selected.clear();
     timer?.cancel();
-    if(switchTimer != null) {
-      switchTimer?.cancel();
-    }
+    super.dispose();
   }
 
   @override
@@ -156,45 +201,92 @@ class _QuizScreenState extends State<QuizScreen> {
         home: Scaffold(
             body: RotatedBox(
                 quarterTurns: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.cancel_sharp, size: 30),
+                child: Builder(builder: (context) {
+                  if (isCorrect) {
+                    Timer(const Duration(milliseconds: 1500), () {
+                      setState(() {
+                        isCorrect = false;
+                      });
+                    });
+                    return PlayingScreen(
+                        timeDuration: timeDuration,
+                        text: 'Richtig',
+                        color: Colors.green);
+                  }
+                  else if(isWrong){
+                    Timer(const Duration(milliseconds: 1500), () {
+                      setState(() {
+                        isWrong = false;
+                      });
+                    });
+                    return PlayingScreen(
+                        timeDuration: timeDuration,
+                        text: 'Übersprungen',
+                        color: Colors.red);
+                  }
+                  else{
+                    return PlayingScreen(
+                      timeDuration: timeDuration,
+                      text: selectedWords.last,
+                      color: Colors.white);
+                  }
+                }))));
+  }
+}
+
+class PlayingScreen extends StatelessWidget {
+  const PlayingScreen({
+    super.key,
+    required this.timeDuration,
+    required this.text,
+    required this.color,
+  });
+
+  final int? timeDuration;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: color,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.cancel_sharp, size: 30),
+              ),
+              Expanded(
+                child: Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.only(right: 40),
+                  child: Text(
+                    '$timeDuration',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.blueGrey[900],
                         ),
-                        Expanded(
-                          child: Container(
-                            alignment: Alignment.center,
-                            margin: const EdgeInsets.only(right: 40),
-                            child: Text(
-                              '$timeDuration',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    color: Colors.blueGrey[900],
-                                  ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: Container(
-                        alignment: Alignment.center,
-                        margin: const EdgeInsets.only(bottom: 80),
-                        child: Text(
-                          selectedWords.last,
-                          style: Theme.of(context).textTheme.displayMedium,
-                        ),
-                      ),
-                    ),
-                  ],
-                ))));
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: Container(
+              alignment: Alignment.center,
+              margin: const EdgeInsets.only(bottom: 80),
+              child: Text(
+                text,
+                style: Theme.of(context).textTheme.displayMedium,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
