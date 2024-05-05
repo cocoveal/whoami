@@ -11,8 +11,7 @@ class Category {
     final csvString =
         await rootBundle.loadString('assets/categories/$name.csv');
     final csv = const CsvToListConverter()
-        .convert(csvString,
-         shouldParseNumbers: false);
+        .convert(csvString, shouldParseNumbers: false);
     if (csv.isEmpty) {
       return [
         ['No data']
@@ -47,7 +46,13 @@ class Category {
     final Category sehenswuerdigkeiten = Category(name: 'Sehenswürdigkeiten');
     var sehenswuerdigkeitenValue =
         await sehenswuerdigkeiten.getCategory().then((value) => value.first);
-    categories.putIfAbsent(sehenswuerdigkeiten.name!, () => sehenswuerdigkeitenValue);
+    categories.putIfAbsent(
+        sehenswuerdigkeiten.name!, () => sehenswuerdigkeitenValue);
+
+    final Category greys_anatomy = Category(name: 'Grey\'s Anatomy');
+    var greys_anatomyValue =
+        await greys_anatomy.getCategory().then((value) => value.first);
+    categories.putIfAbsent(greys_anatomy.name!, () => greys_anatomyValue);
 
     return categories;
   }
