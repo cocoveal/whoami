@@ -194,14 +194,14 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext parentContext) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: Theme.of(context),
         home: Scaffold(
             body: RotatedBox(
                 quarterTurns: 1,
-                child: Builder(builder: (context) {
+                child: Builder(builder: (BuildContext context) {
                   if (isCorrect) {
                     Timer(const Duration(milliseconds: 1500), () {
                       setState(() {
@@ -210,6 +210,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     });
                     return PlayingScreen(
                         timeDuration: timeDuration,
+                        parentContext: parentContext,
                         text: 'Richtig',
                         color: Colors.green);
                   }
@@ -220,12 +221,14 @@ class _QuizScreenState extends State<QuizScreen> {
                       });
                     });
                     return PlayingScreen(
+                        parentContext: parentContext,
                         timeDuration: timeDuration,
                         text: 'Übersprungen',
                         color: Colors.red);
                   }
                   else{
                     return PlayingScreen(
+                      parentContext: parentContext,
                       timeDuration: timeDuration,
                       text: selectedWords.last,
                       color: Colors.white);
@@ -240,11 +243,13 @@ class PlayingScreen extends StatelessWidget {
     required this.timeDuration,
     required this.text,
     required this.color,
+    required this.parentContext,
   });
 
   final int? timeDuration;
   final String text;
   final Color color;
+  final BuildContext parentContext;
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +262,7 @@ class PlayingScreen extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pop(parentContext);
                 },
                 icon: const Icon(Icons.cancel_sharp, size: 30),
               ),
