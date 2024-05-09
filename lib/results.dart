@@ -26,16 +26,19 @@ class ResultsScreen extends StatelessWidget {
           title: const Text('Results', style: TextStyle(color: Colors.white)),
         ),
         body: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Center(
-            child: Column(
+          scrollDirection: Axis.vertical,          
+          child: Container(
+            alignment: Alignment.center,            
+            child: Column( 
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 for (int i = 0; i < selected.length; i++)
                   Text( selected[i], style: TextStyle(
                     color: correct[i] ? Colors.green : Colors.red,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.bold,                    
                     ),
+                    textAlign: TextAlign.center,
                   ),
               ],
             ),

@@ -41,12 +41,11 @@ class _QuizScreenState extends State<QuizScreen> {
 
   bool isWrong = false;
 
+  Timer? stateTimer;
+
   @override
   void initState() {
     super.initState();
-    // SystemChrome.setPreferredOrientations([
-    //   DeviceOrientation.landscapeLeft,
-    // ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     timeDuration = widget.timerDuration;
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -82,15 +81,14 @@ class _QuizScreenState extends State<QuizScreen> {
         setState(() {
           _gyroscopeEvent = event;
 
-          if (isCorrect == false && isWrong == false){
-            if (_gyroscopeEvent!.y > 4) {
+          if (stateTimer?.isActive == false || stateTimer == null) {
+            if (_gyroscopeEvent!.y >= 6.0) {
               if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+                isWrong = true;
                 playedWords.add(selectedWords.last);
                 selectedWords.removeLast();
                 correct.add(false);
-                isWrong = true;
-              } 
-              else {
+              } else {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -101,15 +99,13 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 );
               }
-            }
-            else if (_gyroscopeEvent!.y < -4) {
+            } else if (_gyroscopeEvent!.y <= -6.0) {
               if (selectedWords.isNotEmpty && selectedWords.length > 1) {
+                isCorrect = true;
                 playedWords.add(selectedWords.last);
                 selectedWords.removeLast();
                 correct.add(true);
-                isCorrect = true;
-              }
-              else {
+              } else {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -122,49 +118,7 @@ class _QuizScreenState extends State<QuizScreen> {
               }
             }
           }
-
         });
-
-        // if (_gyroscopeEvent!.y > 4 && isCorrect == false && isWrong == false) {
-        //   setState(() {
-        //     if (selectedWords.isNotEmpty && selectedWords.length > 1) {
-        //       playedWords.add(selectedWords.last);
-        //       selectedWords.removeLast();
-        //       correct.add(false);
-        //       isWrong = true;
-        //     } else {
-        //       Navigator.pushReplacement(
-        //         context,
-        //         MaterialPageRoute(
-        //           builder: (context) => ResultsScreen(
-        //             selected: playedWords,
-        //             correct: correct,
-        //           ),
-        //         ),
-        //       );
-        //     }
-        //   });
-        // }
-        // if (_gyroscopeEvent!.y < -4 && isCorrect == false && isWrong == false) {
-        //   setState(() {
-        //     if (selectedWords.isNotEmpty && selectedWords.length > 1) {
-        //       playedWords.add(selectedWords.last);
-        //       selectedWords.removeLast();
-        //       correct.add(true);
-        //       isCorrect = true;
-        //     } else {
-        //       Navigator.pushReplacement(
-        //         context,
-        //         MaterialPageRoute(
-        //           builder: (context) => ResultsScreen(
-        //             selected: playedWords,
-        //             correct: correct,
-        //           ),
-        //         ),
-        //       );
-        //     }
-        //   });
-        // }
       },
       onError: (e) {
         showDialog(
@@ -183,13 +137,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   void dispose() {
-    // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     for (final subscription in _streamSubscriptions) {
       subscription.cancel();
     }
     selectedWords.clear();
     timer?.cancel();
+    stateTimer!.cancel();
     super.dispose();
   }
 
@@ -203,35 +157,55 @@ class _QuizScreenState extends State<QuizScreen> {
                 quarterTurns: 1,
                 child: Builder(builder: (BuildContext context) {
                   if (isCorrect) {
-                    Timer(const Duration(milliseconds: 1500), () {
-                      setState(() {
-                        isCorrect = false;
+                    if (timeDuration! < 3) {
+                      return PlayingScreen(
+                          timeDuration: timeDuration,
+                          parentContext: parentContext,
+                          text: 'Richtig',
+                          color: Colors.green);
+                    } else {
+                      if (stateTimer?.isActive == false || stateTimer == null) {
+                        stateTimer =
+                          Timer(const Duration(milliseconds: 1500), () {
+                        setState(() {
+                          isCorrect = false;
+                        });
                       });
-                    });
-                    return PlayingScreen(
-                        timeDuration: timeDuration,
-                        parentContext: parentContext,
-                        text: 'Richtig',
-                        color: Colors.green);
-                  }
-                  else if(isWrong){
-                    Timer(const Duration(milliseconds: 1500), () {
-                      setState(() {
-                        isWrong = false;
+                      }                      
+                      return PlayingScreen(
+                          timeDuration: timeDuration,
+                          parentContext: parentContext,
+                          text: 'Richtig',
+                          color: Colors.green);
+                    }
+                  } else if (isWrong) {
+                    if (timeDuration! < 3) {
+                      return PlayingScreen(
+                          timeDuration: timeDuration,
+                          parentContext: parentContext,
+                          text: 'Übersprungen',
+                          color: Colors.red);
+                    } else {
+                      if (stateTimer?.isActive == false || stateTimer == null) {
+                        stateTimer =
+                          Timer(const Duration(milliseconds: 1500), () {
+                        setState(() {
+                          isWrong = false;
+                        });
                       });
-                    });
+                      }
+                      return PlayingScreen(
+                          parentContext: parentContext,
+                          timeDuration: timeDuration,
+                          text: 'Übersprungen',
+                          color: Colors.red);
+                    }
+                  } else {
                     return PlayingScreen(
                         parentContext: parentContext,
                         timeDuration: timeDuration,
-                        text: 'Übersprungen',
-                        color: Colors.red);
-                  }
-                  else{
-                    return PlayingScreen(
-                      parentContext: parentContext,
-                      timeDuration: timeDuration,
-                      text: selectedWords.last,
-                      color: Colors.white);
+                        text: selectedWords.last,
+                        color: Colors.white);
                   }
                 }))));
   }
@@ -260,12 +234,13 @@ class PlayingScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(parentContext);
-                },
-                icon: const Icon(Icons.cancel_sharp, size: 30),
-              ),
+              if (color == Colors.white)
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(parentContext);
+                  },
+                  icon: const Icon(Icons.cancel_sharp, size: 30),
+                ),
               Expanded(
                 child: Container(
                   alignment: Alignment.center,
@@ -284,9 +259,15 @@ class PlayingScreen extends StatelessWidget {
             child: Container(
               alignment: Alignment.center,
               margin: const EdgeInsets.only(bottom: 80),
-              child: Text(
-                text,
-                style: Theme.of(context).textTheme.displayMedium,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                direction: Axis.horizontal,
+                children: [
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.center,
+                ),]
               ),
             ),
           ),
